@@ -54,6 +54,7 @@ public class ProductServiceImpl implements ProductService {
                     .orElseThrow(() -> new RuntimeException("Product not found"));
             product.setName(updatedProduct.getName());
             product.setPrice(updatedProduct.getPrice());
+            product.setCategory(updatedProduct.getCategory());
             return productRepository.save(product);
         } else {
             System.out.println("Forbidden: User " + user.getUsername() + " tried to update product.");
