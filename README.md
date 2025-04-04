@@ -38,6 +38,7 @@ o	Verifies userId matches.
 o	If valid, updates payment status to COMPLETE.
 
 **Supporting Services**
+
 Eureka Server (Service Discovery)
 •	Registers all microservices.
 •	Enables load balancing and dynamic discovery
