@@ -34,16 +34,16 @@ public class UserServiceImpl implements UserService {
     public List<User> getAllUsers() {
 
         List<User> users = userRepository.findAll();
-        System.out.println("Returning users: " + users);  // Debugging Log
+        System.out.println("Returning users: " + users);
         return users;
     }
 
     public List<ProductDTO> fetchAllProducts() {
-        return productFeignClient.getAllProducts();  // Calls Product Service
+        return productFeignClient.getAllProducts();
     }
 
     public ProductDTO fetchProductById(Long productId) {
-        return productFeignClient.getProductById(productId);  // Calls Product Service
+        return productFeignClient.getProductById(productId);
     }
 
     @Override
@@ -53,16 +53,16 @@ public class UserServiceImpl implements UserService {
             user.setPassword(updatedUser.getPassword());
             user.setRole(updatedUser.getRole());
             return userRepository.save(user);
-        }).orElse(null);  // Returns null if user not found
+        }).orElse(null);
     }
 
-    // ✅ DELETE User
+
     @Override
     public boolean deleteUser(Long id) {
         if (userRepository.existsById(id)) {
             userRepository.deleteById(id);
             return true;
         }
-        return false;  // Returns false if user not found
+        return false;
     }
 }
