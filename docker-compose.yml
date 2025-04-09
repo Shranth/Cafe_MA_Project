@@ -1,6 +1,26 @@
 version: '3.8'
 
 services:
+  # Spring Cloud Config Server
+  config-server:
+    image: config-server  # Replace with your Config Server image or build
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    networks:
+      - my_network
+    environment:
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=https://github.com/Shranth/config-repo.git
+      # Replace with your Git repo
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+
+  # Eureka Server
   eureka-server:
     image: eureka-server
     container_name: eureka-server
@@ -43,30 +63,32 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
 
-
-
-
-
-  # Order Service
+  # User Service
   user-service:
     image: user-service
-    depends_on:
-      - eureka-server
-      - mysql-db
     container_name: user-service
     ports:
       - "8081:8081"
     networks:
       - my_network
     environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - eureka.client.serviceUrl.defaultZone=http://eureka-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/cafe_users
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_CLOUD_CONFIG_FAIL_FAST=false  # Prevent immediate crash
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=40  # More attempts
+      - SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL=1000  # Start with 1-second delay
+      - SPRING_CLOUD_CONFIG_RETRY_MAX_INTERVAL=5000
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+      mysql-db:
+        condition: service_started
 
-      eureka.client.service-url.defaultZone: http://eureka-server:8761/eureka/
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/cafe_users
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
-
-
-
+  # Product Service
   product-service:
     image: product-service
     container_name: product-service
@@ -75,36 +97,32 @@ services:
     networks:
       - my_network
     environment:
-
-      eureka.client.service-url.defaultZone: http://eureka-server:8761/eureka/
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/cafe_users
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
-
+      - eureka.client.serviceUrl.defaultZone=http://eureka-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/cafe_users
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
     depends_on:
       - eureka-server
       - mysql-db
 
+  # Order Service
   order-service:
     image: order-service
-    depends_on:
-      - eureka-server
-      - mysql-db
     container_name: order-service
     ports:
       - "8083:8083"
     networks:
       - my_network
     environment:
+      - eureka.client.serviceUrl.defaultZone=http://eureka-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/cafe_users
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+    depends_on:
+      - eureka-server
+      - mysql-db
 
-      eureka.client.service-url.defaultZone: http://eureka-server:8761/eureka/
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/cafe_users
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
-
-
-
-
+  # Payment Service
   payment-service:
     image: payment-service
     container_name: payment-service
@@ -113,12 +131,10 @@ services:
     networks:
       - my_network
     environment:
-
-      eureka.client.service-url.defaultZone: http://eureka-server:8761/eureka/
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/cafe_users
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
-
+      - eureka.client.serviceUrl.defaultZone=http://eureka-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/cafe_users
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
     depends_on:
       - eureka-server
       - mysql-db
@@ -126,6 +142,7 @@ services:
 networks:
   my_network:
     driver: bridge
+
 volumes:
   mysql_data:
     driver: local
