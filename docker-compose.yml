@@ -77,9 +77,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/cafe_users
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_CLOUD_CONFIG_FAIL_FAST=false  # Prevent immediate crash
-      - SPRING_CLOUD_CONFIG_RETRY_MAX_ATTEMPTS=40  # More attempts
-      - SPRING_CLOUD_CONFIG_RETRY_INITIAL_INTERVAL=1000  # Start with 1-second delay
-      - SPRING_CLOUD_CONFIG_RETRY_MAX_INTERVAL=5000
+
     depends_on:
       config-server:
         condition: service_healthy
@@ -97,13 +95,19 @@ services:
     networks:
       - my_network
     environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
       - eureka.client.serviceUrl.defaultZone=http://eureka-server:8761/eureka/
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/cafe_users
       - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_CLOUD_CONFIG_FAIL_FAST=false  # Prevent immediate crash
+
     depends_on:
-      - eureka-server
-      - mysql-db
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+      mysql-db:
+        condition: service_started
 
   # Order Service
   order-service:
@@ -114,13 +118,19 @@ services:
     networks:
       - my_network
     environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
       - eureka.client.serviceUrl.defaultZone=http://eureka-server:8761/eureka/
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/cafe_users
       - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_CLOUD_CONFIG_FAIL_FAST=false  # Prevent immediate crash
+
     depends_on:
-      - eureka-server
-      - mysql-db
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+      mysql-db:
+        condition: service_started
 
   # Payment Service
   payment-service:
@@ -131,13 +141,19 @@ services:
     networks:
       - my_network
     environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
       - eureka.client.serviceUrl.defaultZone=http://eureka-server:8761/eureka/
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/cafe_users
       - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_CLOUD_CONFIG_FAIL_FAST=false  # Prevent immediate crash
+
     depends_on:
-      - eureka-server
-      - mysql-db
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+      mysql-db:
+        condition: service_started
 
 networks:
   my_network:
